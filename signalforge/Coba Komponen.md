@@ -4,16 +4,20 @@ kanban-plugin: board
 
 ---
 
-## 
+## To Buy
+
+- [ ] sx1276
+- [ ] batre
+
+
+## Component
 
 - [ ] pn532
 - [ ] oled
 - [ ] esp32
 - [ ] wifi
-- [ ] batre
 - [ ] bms
 - [ ] ir
-- [ ] sx1276
 
 
 ## Try firmware
@@ -28,6 +32,6 @@ kanban-plugin: board
 
 %% kanban:settings
 ```
-{"kanban-plugin":"board","list-collapse":[false,false,false]}
+{"kanban-plugin":"board","list-collapse":[false,false,false,false]}
 ```
 %%

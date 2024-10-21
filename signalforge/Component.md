@@ -1,5 +1,6 @@
 
 
+
 - 52Kohm resistor
 - 100Kohm resistor
 
@@ -24,8 +25,10 @@
 
 nrf24l01
 pn532
+
 esp32 devkit v4
 oled
+
 battery charging
 stepdown dc-dc
 ir transceiver
