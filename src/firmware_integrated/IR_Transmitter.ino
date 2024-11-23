@@ -13,17 +13,14 @@ uint8_t sRepeats = 0;
 unsigned long prevEnableIRTime = 0;
 
 void ir_module_init() {
-  // Just to know which program is running on my Arduino
-  Serial.println(F("START " __FILE__ " from " __DATE__ "\r\nUsing library version " VERSION_IRREMOTE));
-
 #if defined(IR_SEND_PIN)
   IrSender.begin(); // Start with IR_SEND_PIN
-  Serial.println(F("Send IR signals at pin " STR(IR_SEND_PIN)));
+  Serial.println(F("IR Sender <OK> at pin " STR(IR_SEND_PIN)));
 #endif
 
 #if defined(IR_RECEIVE_PIN)
   IrReceiver.begin(IR_RECEIVE_PIN, ENABLE_LED_FEEDBACK);
-  Serial.print(F("Ready to receive IR signals of protocols: "));
+  Serial.print(F("IR Receiver <OK>"));
   printActiveIRProtocols(&Serial);
   Serial.println(F("at pin " STR(IR_RECEIVE_PIN)));
 #endif
