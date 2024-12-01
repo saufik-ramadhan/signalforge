@@ -1,5 +1,8 @@
 #include <Arduino.h>
 #include <U8g2lib.h>
+#include "FS.h"
+#include "SD.h"
+#include "SPI.h"
 #include "Menu_List.h"
 
 /** ===============================
@@ -32,6 +35,9 @@ void setup() {
   pinMode(BUTTON_DOWN_PIN, INPUT_PULLUP); // down button
   pinMode(BUTTON_SELECT_PIN, INPUT_PULLUP); // select button
   pinMode(BUTTON_BACK_PIN, INPUT_PULLUP);
+
+  // SDCard
+  sdCardInit();
 
   // IRRemote
   ir_module_init();
