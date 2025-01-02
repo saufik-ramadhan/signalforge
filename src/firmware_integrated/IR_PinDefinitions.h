@@ -93,8 +93,8 @@ void noTone(uint8_t aPinNumber){
 }
 #endif // ESP_ARDUINO_VERSION  <= ESP_ARDUINO_VERSION_VAL(2, 0, 2)
 
-#define IR_RECEIVE_PIN          15  // D15
-#define IR_SEND_PIN             17  // TX2
+#define IR_RECEIVE_PIN          27  // D27
+#define IR_SEND_PIN             16  // RX2
 #define TONE_PIN                -1  // D27 25 & 26 are DAC0 and 1
 #define APPLICATION_PIN         -1  // RX2 pin
 

@@ -278,6 +278,7 @@ void handleMenu() {
 
 void render_menu_list(int num_items) {
   // selected item background
+    u8g.setFlipMode(1);
     u8g.drawBitmap(0, 22, 128/8, 21, bitmap_item_sel_outline);
 
     // draw previous item as icon + label
