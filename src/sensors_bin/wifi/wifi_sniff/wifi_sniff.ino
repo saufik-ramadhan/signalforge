@@ -219,10 +219,6 @@ void TaskReadFromSerial(void *pvParameters) {
     int overflow;
     char userInput[50];
 
-    message_t message;
-    message_t* pMessage = &message;
-
-    printFormatted("!Starts Serial Tasks");
     for (;;) {
         if (Serial.available() > 0) {
             overflow = 1;
@@ -245,7 +241,7 @@ void TaskReadFromSerial(void *pvParameters) {
             input = String(userInput);
 
             // Process command get
-            if (input.startsWith("get")) {
+            if (input.startsWith("back")) {
                 updateFromFS(SD);
             }
             
@@ -258,7 +254,7 @@ void TaskReadFromSerial(void *pvParameters) {
             updateFromFS(SD);
 
         }
-        
+
         delay(1000); // wait for a second
     }
 }

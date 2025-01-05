@@ -22,24 +22,15 @@ char main_menu[NUM_ITEMS][MAX_ITEM_LENGTH] = {
 };
 
 char child_menu[NUM_ITEMS][NUM_CHILD_ITEMS][MAX_ITEM_LENGTH] = {
-  {"Read IR", "Send IR", "List IR Cmd"},        // IR Menus
-  {"Read NFC", "Write NFC", "List NFC"},        // NFC Menus
-  {"Scan AP", "Sniff Traffic", "Deauth WiFi"},  // WiFi Menus
-  {"Read File", "Format Storage", "Info"},      // Storage Menus
-  {"Receive", "Send", "Info"},                  // Bluetooth
-  {"Receive", "Send", "Info"},                  // LoRA
+  {"Read IR", "Send IR", "List IR Cmd"},        // IR Menus          0
+  {"Read NFC"},                                 // NFC Menus         1
+  {"Scan AP", "Sniff Traffic"},                 // WiFi Menus        2
+  {"List Directory"},                           // Storage Menus     3
+  {"Scan"},                                     // Bluetooth         4
+  
+  {"Receive", "Send"},                          // LoRA              5
 };
 
-
-
-
-// char menu_items [NUM_ITEMS][MAX_ITEM_LENGTH] = {  // array with item names
-//   { "IR Module" }, 
-//   { "NFC" }, 
-//   { "WiFi Tools" }, 
-//   { "Micro SD" }, 
-//   { "Bluetooth" }
-// };
 
 // note - when changing the order of items above, make sure the other arrays referencing bitmaps
 // also have the same order, for example array "bitmap_icons" for icons, and other arrays for screenshots and QR codes
@@ -52,6 +43,37 @@ void moduleDaemon(int parent, int child) {
       send_ir_signal();
     } else if (parent == 0 && child == 2) { // list ir files
       list_ir_files(0);
+    }
+    if (parent == 1) {
+      if (child == 0) {
+        fwSDupdateFromFSBin(SD, "/signalforge/nfc.bin");
+      }
+    }
+    else if (parent == 2) {
+      if (child == 0) {
+        fwSDupdateFromFSBin(SD, "/signalforge/wifi/wifi_scan.bin");
+      }
+      else if (child == 1) {
+        fwSDupdateFromFSBin(SD, "/signalforge/wifi/wifi_sniff.bin");
+      }
+    }
+    else if (parent == 3) {
+      if (child == 0) {
+        fwSDupdateFromFSBin(SD, "/signalforge/files/list_files.bin");
+      }
+    }
+    else if (parent == 4) {
+      if (child == 0) {
+        fwSDupdateFromFSBin(SD, "/signalforge/bluetooth/bluetooth_scan.bin");
+      }
+    }
+    else if (parent == 5) {
+      if (child == 0) {
+        fwSDupdateFromFSBin(SD, "/signalforge/rf/receive.bin");
+      }
+      else if (child == 1) {
+        fwSDupdateFromFSBin(SD, "/signalforge/rf/send.bin");
+      }
     }
   } else {
     // do nothing

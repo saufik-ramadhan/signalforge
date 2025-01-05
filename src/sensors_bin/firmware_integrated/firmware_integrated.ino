@@ -7,12 +7,6 @@
 #include "Menu_List.h"
 #include "Bitmaps.h"
 
-
-#include "MainMenu_helper.h"
-#include "Helpers.h"
-#include "SD_Card.h"
-
-
 /** ===============================
                 MACROS 
     =============================== **/
@@ -75,6 +69,9 @@ void setup() {
 
   // SDCard
   sdCardInit();
+
+  // IRRemote
+  ir_module_init();
 
 }
 

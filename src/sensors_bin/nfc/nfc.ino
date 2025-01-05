@@ -1,77 +1,123 @@
-/**************************************************************************/
-/*!
-    @file     readMifare.pde
-    @author   Adafruit Industries
-	@license  BSD (see license.txt)
 
-    This example will wait for any ISO14443A card or tag, and
-    depending on the size of the UID will attempt to read from it.
-
-    If the card has a 4-byte UID it is probably a Mifare
-    Classic card, and the following steps are taken:
-
-    - Authenticate block 4 (the first block of Sector 1) using
-      the default KEYA of 0XFF 0XFF 0XFF 0XFF 0XFF 0XFF
-    - If authentication succeeds, we can then read any of the
-      4 blocks in that sector (though only block 4 is read here)
-
-    If the card has a 7-byte UID it is probably a Mifare
-    Ultralight card, and the 4 byte pages can be read directly.
-    Page 4 is read by default since this is the first 'general-
-    purpose' page on the tags.
-
-
-This is an example sketch for the Adafruit PN532 NFC/RFID breakout boards
-This library works with the Adafruit NFC breakout
-  ----> https://www.adafruit.com/products/364
-
-Check out the links above for our tutorials and wiring diagrams
-These chips use SPI or I2C to communicate.
-
-Adafruit invests time and resources providing this open source code,
-please support Adafruit and open-source hardware by purchasing
-products from Adafruit!
-
-*/
-/**************************************************************************/
 #include <Wire.h>
 #include <SPI.h>
 #include <Adafruit_PN532.h>
 
+#include <Update.h>
+#include <FS.h>
+#include <SD.h>
+
+#define BUTTON_BACK_PIN 32 // pin for BACK button
+int button_back_clicked = 0; // same as above
+
 // If using the breakout with SPI, define the pins for SPI communication.
-#define PN532_SCK  (18)
-#define PN532_MOSI (23)
-#define PN532_SS   (15)
-#define PN532_MISO (19)
+#define PN532_SCK  (14)
+#define PN532_MOSI (13)
+#define PN532_SS   (33)
+#define PN532_MISO (12)
 
 // If using the breakout or shield with I2C, define just the pins connected
 // to the IRQ and reset lines.  Use the values below (2, 3) for the shield!
-#define PN532_IRQ   (13)
-#define PN532_RESET (22)  // Not connected by default on the NFC Shield
-
-// Uncomment just _one_ line below depending on how your breakout or shield
-// is connected to the Arduino:
+// #define PN532_IRQ   (13)
+// #define PN532_RESET (22)  // Not connected by default on the NFC Shield
 
 // Use this line for a breakout with a software SPI connection (recommended):
 Adafruit_PN532 nfc(PN532_SCK, PN532_MISO, PN532_MOSI, PN532_SS);
 
-// Use this line for a breakout with a hardware SPI connection.  Note that
-// the PN532 SCK, MOSI, and MISO pins need to be connected to the Arduino's
-// hardware SPI SCK, MOSI, and MISO pins.  On an Arduino Uno these are
-// SCK = 13, MOSI = 11, MISO = 12.  The SS line can be any digital IO pin.
-//Adafruit_PN532 nfc(PN532_SS);
+// perform the actual update from a given stream
+void performUpdate(Stream &updateSource, size_t updateSize) {
+  if (Update.begin(updateSize)) {
+    size_t written = Update.writeStream(updateSource);
+    if (written == updateSize) {
+      Serial.println("Written : " + String(written) + " successfully");
+    } else {
+      Serial.println("Written only : " + String(written) + "/" + String(updateSize) + ". Retry?");
+    }
+    if (Update.end()) {
+      Serial.println("OTA done!");
+      if (Update.isFinished()) {
+        Serial.println("Update successfully completed. Rebooting.");
+      } else {
+        Serial.println("Update not finished? Something went wrong!");
+      }
+    } else {
+      Serial.println("Error Occurred. Error #: " + String(Update.getError()));
+    }
 
-// Or use this line for a breakout or shield with an I2C connection:
-//Adafruit_PN532 nfc(PN532_IRQ, PN532_RESET);
+  } else {
+    Serial.println("Not enough space to begin OTA");
+  }
+}
 
-// Or use hardware Serial:
-//Adafruit_PN532 nfc(PN532_RESET, &Serial1);
+// check given FS for valid update.bin and perform update if available
+void updateFromFS(fs::FS &fs) {
+  File updateBin = fs.open("/signalforge/main.bin");
+  if (updateBin) {
+    if (updateBin.isDirectory()) {
+      Serial.println("Error, update.bin is not a file");
+      updateBin.close();
+      return;
+    }
+
+    size_t updateSize = updateBin.size();
+
+    if (updateSize > 0) {
+      Serial.println("Try to start update");
+      performUpdate(updateBin, updateSize);
+    } else {
+      Serial.println("Error, file is empty");
+    }
+
+    updateBin.close();
+
+    // when finished remove the binary from sd card to indicate end of the process
+    fs.remove("/signalforge/update.bin");
+  } else {
+    Serial.println("Could not load update.bin from sd signalforge/ directory");
+  }
+}
+
+void rebootEspWithReason(String reason) {
+  Serial.println(reason);
+  delay(1000);
+  ESP.restart();
+}
 
 void setup(void) {
   Serial.begin(115200);
   while (!Serial) delay(10); // for Leonardo/Micro/Zero
 
   Serial.println("Hello!");
+
+    uint8_t cardType;
+    //   Serial.println("Welcome to the SD-Update example!");
+
+    // You can uncomment this and build again
+    // Serial.println("Update successful");
+
+    //first init and check SD card
+    if (!SD.begin()) {
+        rebootEspWithReason("Card Mount Failed");
+    }
+
+    cardType = SD.cardType();
+
+    if (cardType == CARD_NONE) {
+        rebootEspWithReason("No SD_MMC card attached");
+    } 
+
+    // Input Buttons
+    pinMode(BUTTON_BACK_PIN, INPUT_PULLUP);
+
+    // Create Tasks
+    xTaskCreate(
+        TaskReadFromSerial, 
+        "Task Read From Serial", 
+        2048,
+        NULL,
+        1,
+        NULL // Task handle is not used here
+    );
 
   nfc.begin();
 
@@ -182,3 +228,52 @@ void loop(void) {
   }
 }
 
+
+void TaskReadFromSerial(void *pvParameters) {
+    String input;
+    String command;
+    int overflow;
+    char userInput[50];
+
+    message_t message;
+    message_t* pMessage = &message;
+
+    for (;;) {
+        if (Serial.available() > 0) {
+            overflow = 1;
+
+            // Read Serial until termniation
+            for (int i = 0; i < 50 - 1; i++) {
+                while (Serial.available() == 0) {}
+                userInput[i] = Serial.read();
+                if (userInput[i] == '\n' || userInput[i] == '\0' || userInput[i] == '\r') {
+                    userInput[i+1] = 0;
+                    overflow = 0;
+                    break;
+                }
+            }
+
+            if (overflow == 1) {
+                break;
+            }
+
+            input = String(userInput);
+
+            // Process command get
+            if (input.startsWith("back")) {
+                updateFromFS(SD);
+            }
+            
+            Serial.flush();
+
+        }
+        
+        if ((digitalRead(BUTTON_BACK_PIN) == LOW) && (button_back_clicked == 0)) {
+            // back to main menu                
+            updateFromFS(SD);
+
+        }
+
+        delay(1000); // wait for a second
+    }
+}

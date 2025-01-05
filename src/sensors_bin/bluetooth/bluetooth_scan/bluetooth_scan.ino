@@ -18,6 +18,13 @@
 #include <map>
 #include <BluetoothSerial.h>
 
+#include <Update.h>
+#include <FS.h>
+#include <SD.h>
+
+#define BUTTON_BACK_PIN 32 // pin for BACK button
+int button_back_clicked = 0; // same as above
+
 #if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
 #error Bluetooth is not enabled! Please run `make menuconfig` to and enable it
 #endif
@@ -36,7 +43,38 @@ esp_spp_role_t role=ESP_SPP_ROLE_SLAVE; // or ESP_SPP_ROLE_MASTER
 // std::map<BTAddress, BTAdvertisedDeviceSet> btDeviceList;
 
 void setup() {
-  Serial.begin(115200);
+    uint8_t cardType;
+    Serial.begin(115200);
+    //   Serial.println("Welcome to the SD-Update example!");
+
+    // You can uncomment this and build again
+    // Serial.println("Update successful");
+
+    //first init and check SD card
+    if (!SD.begin()) {
+        rebootEspWithReason("Card Mount Failed");
+    }
+
+    cardType = SD.cardType();
+
+    if (cardType == CARD_NONE) {
+        rebootEspWithReason("No SD_MMC card attached");
+    } 
+
+    // Input Buttons
+    pinMode(BUTTON_BACK_PIN, INPUT_PULLUP);
+
+    // Create Tasks
+    xTaskCreate(
+        TaskReadFromSerial, 
+        "Task Read From Serial", 
+        2048,
+        NULL,
+        1,
+        NULL // Task handle is not used here
+    );
+
+
   if(! SerialBT.begin("ESP32test", true) ) {
     Serial.println("========== serialBT failed!");
     abort();
@@ -111,4 +149,101 @@ void loop() {
     Serial.println("not connected");
   }
   delay(1000);
+}
+
+void TaskReadFromSerial(void *pvParameters) {
+    String input;
+    String command;
+    int overflow;
+    char userInput[50];
+
+    message_t message;
+    message_t* pMessage = &message;
+
+    for (;;) {
+        if (Serial.available() > 0) {
+            overflow = 1;
+
+            // Read Serial until termniation
+            for (int i = 0; i < 50 - 1; i++) {
+                while (Serial.available() == 0) {}
+                userInput[i] = Serial.read();
+                if (userInput[i] == '\n' || userInput[i] == '\0' || userInput[i] == '\r') {
+                    userInput[i+1] = 0;
+                    overflow = 0;
+                    break;
+                }
+            }
+
+            if (overflow == 1) {
+                break;
+            }
+
+            input = String(userInput);
+
+            // Process command get
+            if (input.startsWith("back")) {
+                updateFromFS(SD);
+            }
+            
+            Serial.flush();
+
+        }
+        
+        if ((digitalRead(BUTTON_BACK_PIN) == LOW) && (button_back_clicked == 0)) {
+            // back to main menu                
+            updateFromFS(SD);
+
+        }
+
+        delay(1000); // wait for a second
+    }
+}
+void TaskReadFromSerial(void *pvParameters) {
+    String input;
+    String command;
+    int overflow;
+    char userInput[50];
+
+    message_t message;
+    message_t* pMessage = &message;
+
+    for (;;) {
+        if (Serial.available() > 0) {
+            overflow = 1;
+
+            // Read Serial until termniation
+            for (int i = 0; i < 50 - 1; i++) {
+                while (Serial.available() == 0) {}
+                userInput[i] = Serial.read();
+                if (userInput[i] == '\n' || userInput[i] == '\0' || userInput[i] == '\r') {
+                    userInput[i+1] = 0;
+                    overflow = 0;
+                    break;
+                }
+            }
+
+            if (overflow == 1) {
+                break;
+            }
+
+            input = String(userInput);
+
+            // Process command get
+            if (input.startsWith("back")) {
+                updateFromFS(SD);
+            }
+            
+            Serial.flush();
+
+        }
+        
+        if ((digitalRead(BUTTON_BACK_PIN) == LOW) && (button_back_clicked == 0)) {
+            // back to main menu                
+            updateFromFS(SD);
+
+        }
+
+        delay(1000); // wait for a second
+    }
 }
