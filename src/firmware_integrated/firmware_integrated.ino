@@ -18,7 +18,7 @@ U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g(U8G2_R2, /* reset=*/ U8X8_PIN_NONE, /* c
 #define BUTTON_UP_PIN 32 // pin for UP button 
 #define BUTTON_DOWN_PIN 33 // pin for DOWN button
 #define BUTTON_SELECT_PIN 25 // pin for SELECT button
-#define BUTTON_BACK_PIN 26 // pin for BACK button
+#define BUTTON_BACK_PIN 4 // pin for BACK button
 
 
 /** ===============================
@@ -38,20 +38,20 @@ void setup() {
   pinMode(BUTTON_SELECT_PIN, INPUT_PULLUP); // select button
   pinMode(BUTTON_BACK_PIN, INPUT_PULLUP);
 
-  if (!SD.begin()) {
-    rebootEspWithReason("Card Mount Failed");
-  }
-  cardType = SD.cardType();
+  // if (!SD.begin()) {
+  //   rebootEspWithReason("Card Mount Failed");
+  // }
+  // cardType = SD.cardType();
 
-  // SDCard Firmware Update
-  if (cardType == CARD_NONE) {
-    rebootEspWithReason("No SD_MMC card attached");
-  } else {
-    fwSDupdateFromFS(SD);
-  }
+  // // SDCard Firmware Update
+  // if (cardType == CARD_NONE) {
+  //   rebootEspWithReason("No SD_MMC card attached");
+  // } else {
+  //   fwSDupdateFromFS(SD);
+  // }
 
   // SDCard
-  // sdCardInit();
+  sdCardInit();
 
   // IRRemote
   ir_module_init();
