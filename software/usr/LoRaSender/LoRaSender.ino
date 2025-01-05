@@ -3,16 +3,20 @@
 
 int counter = 0;
 
-#define ss 5
-#define rst 14
-#define dio0 2
+#define ss 15
+#define rst 4
+#define dio0 -1
+
+SPIClass *hspi = NULL;
 
 void setup() {
   Serial.begin(9600);
   while (!Serial);
 
+  hspi = new SPIClass(HSPI);
   Serial.println("LoRa Sender");
 
+  LoRa.setSPI(*hspi);
   LoRa.setPins(ss, rst, dio0);
   
   if (!LoRa.begin(915E6)) {

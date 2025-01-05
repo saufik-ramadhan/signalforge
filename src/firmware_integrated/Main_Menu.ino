@@ -17,27 +17,29 @@ char main_menu[NUM_ITEMS][MAX_ITEM_LENGTH] = {
   { "NFC" },
   { "WiFi Tools" },
   { "Micro SD" },
-  { "Bluetooth" }
+  { "Bluetooth" },
+  { "LoRA" }
 };
 
 char child_menu[NUM_ITEMS][NUM_CHILD_ITEMS][MAX_ITEM_LENGTH] = {
-  {"Read IR", "Send IR", "List IR Cmd"},    // IR Menus
-  {"Read NFC", "Write NFC", "List NFC"},    // NFC Menus
+  {"Read IR", "Send IR", "List IR Cmd"},        // IR Menus
+  {"Read NFC", "Write NFC", "List NFC"},        // NFC Menus
   {"Scan AP", "Sniff Traffic", "Deauth WiFi"},  // WiFi Menus
-  {"Read File", "Format Storage", "Info"},   // Storage Menus
-  {"Receive", "Send", "Info"}      // Other Menus
+  {"Read File", "Format Storage", "Info"},      // Storage Menus
+  {"Receive", "Send", "Info"},                  // Bluetooth
+  {"Receive", "Send", "Info"},                  // LoRA
 };
 
 
 
 
-char menu_items [NUM_ITEMS][MAX_ITEM_LENGTH] = {  // array with item names
-  { "IR Module" }, 
-  { "NFC" }, 
-  { "WiFi Tools" }, 
-  { "Micro SD" }, 
-  { "Bluetooth" }
-};
+// char menu_items [NUM_ITEMS][MAX_ITEM_LENGTH] = {  // array with item names
+//   { "IR Module" }, 
+//   { "NFC" }, 
+//   { "WiFi Tools" }, 
+//   { "Micro SD" }, 
+//   { "Bluetooth" }
+// };
 
 // note - when changing the order of items above, make sure the other arrays referencing bitmaps
 // also have the same order, for example array "bitmap_icons" for icons, and other arrays for screenshots and QR codes
