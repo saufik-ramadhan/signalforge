@@ -12,12 +12,6 @@ int parent_idx = -1;
 int item_sel_previous;    // previous item - used in the menu screen to draw the item before the selected one
 int item_sel_next;        // next item - used in the menu screen to draw next item after the selected one
 
-// BUTTONS
-int button_up_clicked = 0; // only perform action when button is clicked, and wait until another press
-int button_down_clicked = 0; // same as above
-int button_select_clicked = 0; // same as above
-int button_back_clicked = 0; // same as above
-
 char main_menu[NUM_ITEMS][MAX_ITEM_LENGTH] = {
   { "IR Module" },
   { "NFC" },
@@ -55,8 +49,7 @@ void moduleDaemon(int parent, int child) {
     } else if (parent == 0 && child == 1) { // write ir
       send_ir_signal();
     } else if (parent == 0 && child == 2) { // list ir files
-      File dir = SD.open("/infrared");
-      list_ir_files(dir, 0);
+      list_ir_files(0);
     }
   } else {
     // do nothing
@@ -64,21 +57,24 @@ void moduleDaemon(int parent, int child) {
 }
 
 void handleMenu() {
-  // up and down buttons only work for the menu screen
-  if ((digitalRead(BUTTON_UP_PIN) == LOW) && (button_up_clicked == 0)) { // up button clicked - jump to previous menu item
-    item_selected = item_selected - 1; // select previous item
-    button_up_clicked = 1; // set button to clicked to only perform the action once
-    if (item_selected < 0) { // if first item was selected, jump to last item
-      item_selected = number_of_items-1;
+  if(current_screen == 0 || current_screen == 1) {
+    // up and down buttons only work for the menu screen
+    if ((digitalRead(BUTTON_UP_PIN) == LOW) && (button_up_clicked == 0)) { // up button clicked - jump to previous menu item
+      item_selected = item_selected - 1; // select previous item
+      button_up_clicked = 1; // set button to clicked to only perform the action once
+      if (item_selected < 0) { // if first item was selected, jump to last item
+        item_selected = number_of_items-1;
+      }
+    }
+    else if ((digitalRead(BUTTON_DOWN_PIN) == LOW) && (button_down_clicked == 0)) { // down button clicked - jump to next menu item
+      item_selected = item_selected + 1; // select next item
+      button_down_clicked = 1; // set button to clicked to only perform the action once
+      if (item_selected >= number_of_items) { // last item was selected, jump to first menu item
+        item_selected = 0;
+      }
     }
   }
-  else if ((digitalRead(BUTTON_DOWN_PIN) == LOW) && (button_down_clicked == 0)) { // down button clicked - jump to next menu item
-    item_selected = item_selected + 1; // select next item
-    button_down_clicked = 1; // set button to clicked to only perform the action once
-    if (item_selected >= number_of_items) { // last item was selected, jump to first menu item
-      item_selected = 0;
-    }
-  }
+ 
 
   if(current_screen == 0) {
     if ((digitalRead(BUTTON_SELECT_PIN) == LOW) && (button_select_clicked == 0)) {
@@ -207,8 +203,8 @@ void render_child_menu_list(int parent_idx, int num_items) {
 void render_running_screen() {
   if(parent_idx == 0 && item_selected == 2) {
     // List IR Command Screen
-    // render_list_ir_cmd();
-    u8g.clear();
+    render_list_ir_cmd();
+    // u8g.clear();
   } else {
     u8g.setFont(u8g_font_7x14B);
     u8g.drawStr(0, 15, "running:");

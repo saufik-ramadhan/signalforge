@@ -34,39 +34,65 @@ void get_ir_module_db() {
   File file = SD.open("/infrared/");
 }
 
+void list_ir_nav() {
+
+}
+
 void render_list_ir_cmd() {
-  // selected item background
-    u8g.setFlipMode(0);
-    u8g.drawBitmap(0, 22, 128/8, 21, bitmap_item_sel_outline);
+    // selected item background
+    u8g.drawBitmap(0, 22, 128/8, 21, bitmap_item_sel_outline);    
 
     // draw previous item as icon + label
     u8g.setFont(u8g_font_7x14);
-    u8g.drawStr(25, 15, "huyhuiy"); 
-    u8g.drawBitmap( 4, 2, 16/8, 16, bitmap_icons[0]);          
+    if (ir_buffer_list[item_prev] != nullptr && ir_buffer_list[item_prev][0] != '\0') {
+        u8g.drawStr(25, 15, ir_buffer_list[item_prev]);
+    } else {
+        u8g.drawStr(25, 15, "N/A"); // Default text if undefined
+    }
+    u8g.drawBitmap( 4, 2, 16/8, 16, bitmap_icons[0]);
 
     // draw selected item as icon + label in bold font
     u8g.setFont(u8g_font_7x14B);    
-    u8g.drawStr(25, 15+20+2, ir_buffer_list[1]);   
+    if (ir_buffer_list[item_sel] != nullptr && ir_buffer_list[item_sel][0] != '\0') {
+        u8g.drawStr(25, 15 + 20 + 2, ir_buffer_list[item_sel]);
+    } else {
+        u8g.drawStr(25, 15 + 20 + 2, "N/A"); // Default text if undefined
+    }
     u8g.drawBitmap( 4, 24, 16/8, 16, bitmap_icons[0]);     
 
     // draw next item as icon + label
-    u8g.setFont(u8g_font_7x14);     
-    u8g.drawStr(25, 15+20+20+2+2, ir_buffer_list[0]);   
-    u8g.drawBitmap( 4, 46, 16/8, 16, bitmap_icons[0]);        
+    u8g.setFont(u8g_font_7x14B);    
+    if (ir_buffer_list[item_next] != nullptr && ir_buffer_list[item_next][0] != '\0') {
+        u8g.drawStr(25, 15 + 20 + 20 + 2 + 2, ir_buffer_list[item_next]);
+    } else {
+        u8g.drawStr(25, 15 + 20 + 20 + 2 + 2, "N/A"); // Default text if undefined
+    }
+    u8g.drawBitmap( 4, 46, 16/8, 16, bitmap_icons[0]);     
 
-    // draw scrollbar handle
+    //draw scrollbar handle
     u8g.drawBox(125, 64/num_items * item_sel, 3, 64/num_items);
 }
 
-void list_ir_files(File dir, int numTabs) {
+void list_ir_files(int numTabs) {
   if ((digitalRead(BUTTON_SELECT_PIN) == LOW) && (isRendering == false)) {
+    File dir = SD.open("/infrared");
+    
+    // set correct values for the previous and next items
+    item_prev = item_sel - 1;
+    if (item_prev < 0) {
+      item_prev = num_items - 1;
+    } // previous item would be below first = make it the last
+    item_next = item_sel + 1;  
+    if (item_next >= num_items) {
+      item_next = 0;
+    } // next item would be after last = make it the first
+
     isRendering = true;
     while (true) {
       File entry = dir.openNextFile();
       if (!entry) {
         // No more files
         isRendering = false;
-        render_list_ir_cmd();
         break;
       }
       
