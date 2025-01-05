@@ -5,6 +5,7 @@
 #include "SD.h"
 #include "SPI.h"
 #include "Menu_List.h"
+#include "Bitmaps.h"
 
 /** ===============================
                 MACROS 

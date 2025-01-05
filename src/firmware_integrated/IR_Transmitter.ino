@@ -7,6 +7,16 @@ uint16_t sAddress = 0x7;
 uint8_t sCommand = 0x2;
 uint16_t s16BitCommand = 0x5634;
 uint8_t sRepeats = 0;
+const int MAX_IR_ITEM_LENGTH = 10;
+const int MAX_IR_NUM_ITEM = 100;
+bool isRendering = false;
+
+int item_sel = 0;
+int item_prev = 0;
+int item_next = 0;
+int num_items = 0;
+
+char ir_buffer_list[MAX_IR_NUM_ITEM][MAX_IR_ITEM_LENGTH] = {};
 
 struct IRSignal {
   String name;
@@ -24,25 +34,57 @@ void get_ir_module_db() {
   File file = SD.open("/infrared/");
 }
 
-void list_ir_files(File dir, int numTabs) {  
-    File entry = dir.openNextFile();
-    if (!entry) {
-      // No more files
-      return;
+void render_list_ir_cmd() {
+  // selected item background
+    u8g.setFlipMode(0);
+    u8g.drawBitmap(0, 22, 128/8, 21, bitmap_item_sel_outline);
+
+    // draw previous item as icon + label
+    u8g.setFont(u8g_font_7x14);
+    u8g.drawStr(25, 15, "huyhuiy"); 
+    u8g.drawBitmap( 4, 2, 16/8, 16, bitmap_icons[0]);          
+
+    // draw selected item as icon + label in bold font
+    u8g.setFont(u8g_font_7x14B);    
+    u8g.drawStr(25, 15+20+2, ir_buffer_list[1]);   
+    u8g.drawBitmap( 4, 24, 16/8, 16, bitmap_icons[0]);     
+
+    // draw next item as icon + label
+    u8g.setFont(u8g_font_7x14);     
+    u8g.drawStr(25, 15+20+20+2+2, ir_buffer_list[0]);   
+    u8g.drawBitmap( 4, 46, 16/8, 16, bitmap_icons[0]);        
+
+    // draw scrollbar handle
+    u8g.drawBox(125, 64/num_items * item_sel, 3, 64/num_items);
+}
+
+void list_ir_files(File dir, int numTabs) {
+  if ((digitalRead(BUTTON_SELECT_PIN) == LOW) && (isRendering == false)) {
+    isRendering = true;
+    while (true) {
+      File entry = dir.openNextFile();
+      if (!entry) {
+        // No more files
+        isRendering = false;
+        render_list_ir_cmd();
+        break;
+      }
+      
+      strcpy(ir_buffer_list[num_items], { entry.name() });
+      num_items += 1;
+
+      Serial.print(entry.name());
+      if (entry.isDirectory()) {
+        Serial.println("/");
+        // list_ir_files(entry, numTabs + 1); // Recursive call for subdirectories
+      } else {
+        // Files, print size
+        Serial.print("\t");
+        Serial.println(entry.size(), DEC);
+      }
+      entry.close();
     }
-    for (int i = 0; i < numTabs; i++) {
-      Serial.print('\t'); // Indent for subdirectories
-    }
-    Serial.print(entry.name());
-    if (entry.isDirectory()) {
-      Serial.println("/");
-      list_ir_files(entry, numTabs + 1); // Recursive call for subdirectories
-    } else {
-      // Files, print size
-      Serial.print("\t");
-      Serial.println(entry.size(), DEC);
-    }
-    entry.close();
+  }
 }
 
 void ir_module_init() {
