@@ -8,9 +8,42 @@ uint8_t sCommand = 0x2;
 uint16_t s16BitCommand = 0x5634;
 uint8_t sRepeats = 0;
 
+struct IRSignal {
+  String name;
+  String protocol;
+  String address;
+  String command;
+};
+
+IRSignal irSignals[10]; // Adjust size based on expected signals
 
 
 unsigned long prevEnableIRTime = 0;
+
+void get_ir_module_db() {
+  File file = SD.open("/infrared/");
+}
+
+void list_ir_files(File dir, int numTabs) {  
+    File entry = dir.openNextFile();
+    if (!entry) {
+      // No more files
+      return;
+    }
+    for (int i = 0; i < numTabs; i++) {
+      Serial.print('\t'); // Indent for subdirectories
+    }
+    Serial.print(entry.name());
+    if (entry.isDirectory()) {
+      Serial.println("/");
+      list_ir_files(entry, numTabs + 1); // Recursive call for subdirectories
+    } else {
+      // Files, print size
+      Serial.print("\t");
+      Serial.println(entry.size(), DEC);
+    }
+    entry.close();
+}
 
 void ir_module_init() {
 #if defined(IR_SEND_PIN)

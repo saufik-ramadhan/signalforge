@@ -176,6 +176,9 @@ void moduleDaemon(int parent, int child) {
       read_ir_signal();
     } else if (parent == 0 && child == 1) { // write ir
       send_ir_signal();
+    } else if (parent == 0 && child == 2) { // list ir files
+      File dir = SD.open("/infrared");
+      list_ir_files(dir, 0);
     }
   } else {
     // do nothing
@@ -278,7 +281,7 @@ void handleMenu() {
 
 void render_menu_list(int num_items) {
   // selected item background
-    u8g.setFlipMode(1);
+    u8g.setFlipMode(0);
     u8g.drawBitmap(0, 22, 128/8, 21, bitmap_item_sel_outline);
 
     // draw previous item as icon + label
