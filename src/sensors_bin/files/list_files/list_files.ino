@@ -114,7 +114,7 @@ void rebootEspWithReason(String reason) {
 
 void loop() {
     delay(2000);
-    listDir(SD, "/", 2)    
+    listDir(SD, "/", 2);
 }
 
 void TaskReadFromSerial(void *pvParameters) {
@@ -122,9 +122,6 @@ void TaskReadFromSerial(void *pvParameters) {
     String command;
     int overflow;
     char userInput[50];
-
-    message_t message;
-    message_t* pMessage = &message;
 
     for (;;) {
         if (Serial.available() > 0) {

@@ -235,9 +235,6 @@ void TaskReadFromSerial(void *pvParameters) {
     int overflow;
     char userInput[50];
 
-    message_t message;
-    message_t* pMessage = &message;
-
     for (;;) {
         if (Serial.available() > 0) {
             overflow = 1;
