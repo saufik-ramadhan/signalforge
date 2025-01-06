@@ -6,6 +6,7 @@
 #include "SPI.h"
 #include "Menu_List.h"
 #include "Bitmaps.h"
+#include "WiFi.h"
 
 /** ===============================
                 MACROS 

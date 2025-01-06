@@ -52,6 +52,18 @@ void moduleDaemon(int parent, int child) {
       send_ir_signal();
     } else if (parent == 0 && child == 2) { // list ir files
       list_ir_files(0);
+    } else if (parent == 1 && child == 0) { // NFC read
+
+    } else if (parent == 1 && child == 1) { // NFC write
+
+    } else if (parent == 1 && child == 2) { // NFC list
+
+    } else if (parent == 2 && child == 0) { // WiFi scan
+      wifi_scan_tool();
+    } else if (parent == 2 && child == 1) { // WiFi sniff
+
+    } else if (parent == 2 && child == 2) { // WiFi deauth
+
     }
   } else {
     // do nothing
@@ -203,11 +215,18 @@ void render_child_menu_list(int parent_idx, int num_items) {
 }
 
 void render_running_screen() {
-  if(parent_idx == 0 && item_selected == 2) {
+  if(parent_idx == 0 && item_selected == 0) {
+    render_ir_info();
+  }
+  else if(parent_idx == 0 && item_selected == 2) {
     // List IR Command Screen
     render_list_ir_cmd();
     // u8g.clear();
-  } else {
+  } 
+  else if (parent_idx == 2 && item_selected == 0) {
+    render_wifi_list();
+  }
+  else {
     u8g.setFont(u8g_font_7x14B);
     u8g.drawStr(0, 15, "running:");
   }

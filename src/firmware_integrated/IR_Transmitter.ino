@@ -10,6 +10,8 @@ uint8_t sRepeats = 0;
 const int MAX_IR_ITEM_LENGTH = 10;
 const int MAX_IR_NUM_ITEM = 100;
 bool isRendering = false;
+String ir_module_path = "/infrared";
+int ir_module_screen = 0;
 
 int item_sel = 0;
 int item_prev = 0;
@@ -30,15 +32,66 @@ IRSignal irSignals[10]; // Adjust size based on expected signals
 
 unsigned long prevEnableIRTime = 0;
 
-void get_ir_module_db() {
-  File file = SD.open("/infrared/");
+void refresh_ir_menu() {
+  // set correct values for the previous and next items
+  item_prev = item_sel - 1;
+  if (item_prev < 0) {
+    item_prev = num_items - 1;
+  } // previous item would be below first = make it the last
+  item_next = item_sel + 1;  
+  if (item_next >= num_items) {
+    item_next = 0;
+  } // next item would be after last = make it the first
 }
 
 void list_ir_nav() {
+  refresh_ir_menu();
+  // up and down buttons only work for the menu screen
+  if ((digitalRead(BUTTON_UP_PIN) == LOW) && (button_up_clicked == 0)) { // up button clicked - jump to previous menu item
+    item_sel = item_sel - 1; // select previous item
+    button_up_clicked = 1; // set button to clicked to only perform the action once
+    if (item_sel < 0) { // if first item was selected, jump to last item
+      item_sel = num_items-1;
+    }
+  }
+  else if ((digitalRead(BUTTON_DOWN_PIN) == LOW) && (button_down_clicked == 0)) { // down button clicked - jump to next menu item
+    item_sel = item_sel + 1; // select next item
+    button_down_clicked = 1; // set button to clicked to only perform the action once
+    if (item_sel >= num_items) { // last item was selected, jump to first menu item
+      item_sel = 0;
+    }
+  }
 
+  // if ((digitalRead(BUTTON_SELECT_PIN) == LOW) && (button_select_clicked == 0)) {
+  //   number_of_items = NUM_CHILD_ITEMS;
+  //   current_screen = current_screen + 1;
+  //   parent_idx = item_selected;
+  //   button_select_clicked = 1;
+  //   item_selected = 0;
+  // } else if ((digitalRead(BUTTON_BACK_PIN) == LOW) && (button_back_clicked == 0)) {
+  //   current_screen = 0; // you are already at main menu
+  //   button_back_clicked = 1;
+  //   item_selected = 0;
+  // }
+
+  // debounce button
+  // if ((digitalRead(BUTTON_UP_PIN) == HIGH) && (button_up_clicked == 1)) { // unclick 
+  //   button_up_clicked = 0;
+  // }
+  // if ((digitalRead(BUTTON_DOWN_PIN) == HIGH) && (button_down_clicked == 1)) { // unclick
+  //   button_down_clicked = 0;
+  // }
+  // if ((digitalRead(BUTTON_SELECT_PIN) == HIGH) && (button_select_clicked == 1)) { // unclick
+  //   button_select_clicked = 0;
+  // }
+  // if ((digitalRead(BUTTON_BACK_PIN) == HIGH) && (button_back_clicked == 1)) { // unclick
+  //   button_back_clicked = 0;re
+  // }
 }
 
 void render_list_ir_cmd() {
+    list_ir_nav();
+
     // selected item background
     u8g.drawBitmap(0, 22, 128/8, 21, bitmap_item_sel_outline);    
 
@@ -70,12 +123,22 @@ void render_list_ir_cmd() {
     u8g.drawBitmap( 4, 46, 16/8, 16, bitmap_icons[0]);     
 
     //draw scrollbar handle
-    u8g.drawBox(125, 64/num_items * item_sel, 3, 64/num_items);
+    // u8g.drawBox(125, 64/num_items * item_sel, 3, 64/num_items);
 }
 
 void list_ir_files(int numTabs) {
   if ((digitalRead(BUTTON_SELECT_PIN) == LOW) && (isRendering == false)) {
-    File dir = SD.open("/infrared");
+    isRendering = true;
+    num_items = 0;
+
+    String current_path = ir_module_path;
+    if (ir_buffer_list[item_sel] != nullptr && ir_buffer_list[item_sel][0] != '\0') {
+      current_path = current_path + "/" + ir_buffer_list[item_sel];
+      memset(ir_buffer_list, 0, sizeof(ir_buffer_list));
+    } else {
+      current_path = current_path;
+    }
+    File dir = SD.open(current_path);
     
     // set correct values for the previous and next items
     item_prev = item_sel - 1;
@@ -87,7 +150,6 @@ void list_ir_files(int numTabs) {
       item_next = 0;
     } // next item would be after last = make it the first
 
-    isRendering = true;
     while (true) {
       File entry = dir.openNextFile();
       if (!entry) {
@@ -182,6 +244,33 @@ void send_ir_signal() {
   }
 }
 
+
+char* ir_address;
+char* ir_command;
+char* ir_make;
+
+void render_ir_info() {
+  u8g.clear();
+  u8g.setFont(u8g_font_7x14B);
+  
+
+  // if (ir_address_buffer != nullptr && ir_address_buffer[0] != '\0') {
+  //     u8g.drawStr(25, 15, ir_address_buffer);
+  // } else {
+  //     u8g.drawStr(25, 15, "N/A"); // Default text if undefined
+  // }
+  if (ir_command != nullptr && ir_command[0] != '\0') {
+      u8g.drawStr(25, 15 + 20 + 2, ir_command);
+  } else {
+      u8g.drawStr(25, 15 + 20 + 2, "N/A"); // Default text if undefined
+  }
+  // if (ir_make != nullptr && ir_make[0] != '\0') {
+  //     u8g.drawStr(25, 15 + 20 + 20 + 2 + 2, ir_make);
+  // } else {
+  //     u8g.drawStr(25, 15 + 20 + 20 + 2 + 2, "N/A"); // Default text if undefined
+  // }
+}
+
 void read_ir_signal() {
   if (IrReceiver.decode()) {
     /** Print a summary of received data */
@@ -194,6 +283,12 @@ void read_ir_signal() {
       IrReceiver.resume(); // Early enable receiving of the next IR frame
       IrReceiver.printIRResultShort(&Serial);
       IrReceiver.printIRSendUsage(&Serial);
+
+      char ir_address_buffer[10];           // Create a character buffer
+      sprintf(ir_address, "%d", IrReceiver.decodedIRData.address); // Convert integer to string
+      char ir_command_buffer[10];           // Create a character buffer
+      sprintf(ir_command, "%d", IrReceiver.decodedIRData.command); // Convert integer to string
+      strcpy(ir_make, getProtocolString(IrReceiver.decodedIRData.protocol)); // Copy content
     }
     Serial.println();
 
