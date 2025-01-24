@@ -148,7 +148,9 @@ void TaskReadFromSerial(void *pvParameters) {
 
             // Read Serial until termniation
             for (int i = 0; i < 50 - 1; i++) {
-                while (Serial.available() == 0) {}
+                while (Serial.available() == 0) {
+                    delay(20);
+                }
                 userInput[i] = Serial.read();
                 if (userInput[i] == '\n' || userInput[i] == '\0' || userInput[i] == '\r') {
                     userInput[i+1] = 0;
