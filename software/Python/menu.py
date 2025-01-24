@@ -166,7 +166,7 @@ class SerialControlGUI:
             ser = serial.Serial(port, baudrate=9600, timeout=1)
             
             # Ask for status
-            ser.write(b'get\n')
+            ser.write(b'[]get\n')
 
             # Wait for response
             data = [0, 0]
