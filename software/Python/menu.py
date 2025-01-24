@@ -40,28 +40,15 @@ class SerialControlGUI:
         self.frame_btm_left.pack(side=tk.LEFT, expand=True)
         if True:
             # create a list box
-            
-            # char main_menu[NUM_ITEMS][MAX_ITEM_LENGTH] = {
-            #   { "IR Module" },
-            #   { "NFC" },
-            #   { "WiFi Tools" },
-            #   { "Micro SD" },
-            #   { "Bluetooth" },
-            #   { "LoRA" }
-            # };
-            # 
-            # char child_menu[NUM_ITEMS][NUM_CHILD_ITEMS][MAX_ITEM_LENGTH] = {
-            #   {"Read IR", "Send IR", "List IR Cmd"},        // IR Menus          0
-            #   {"Read NFC"},                                 // NFC Menus         1
-            #   {"Scan AP", "Sniff Traffic"},                 // WiFi Menus        2
-            #   {"List Directory"},                           // Storage Menus     3
-            #   {"Scan"},                                     // Bluetooth         4
-            #   
-            #   {"Receive", "Send"},                          // LoRA              5
-            # };
-
             langs = ('IR Module', 'NFC', 'WiFi Tools', 'Micro SD', 'Bluetooth',
                     'LoRA')
+            self.menu_item = []
+            self.menu_item.append(('Read IR', 'Send IR', 'List IR Cmd'))
+            self.menu_item.append(('Read NFC'))
+            self.menu_item.append(('Scan AP', 'Sniff Traffic'))
+            self.menu_item.append(('List Directory'))
+            self.menu_item.append(('Scan'))
+            self.menu_item.append(('Receive', 'Send'))
 
             self.var = tk.Variable(value=langs)
 
@@ -70,7 +57,6 @@ class SerialControlGUI:
                 listvariable=self.var,
                 height=8,
                 selectmode=tk.SINGLE)
-
 
             self.listbox.pack(expand=True, fill=tk.BOTH, side=tk.LEFT)
             self.listbox.selection_clear(0, tk.END)
