@@ -28,8 +28,8 @@ void setup() {
 
     // Create Tasks
     xTaskCreate(
-        TaskReadFromSerial, 
-        "Task Read From Serial", 
+        TaskReadFromSerial,
+        "Task Read From Serial",
         2048,
         NULL,
         1,
@@ -53,62 +53,62 @@ void setup() {
 }
 
 // perform the actual update from a given stream
-void performUpdate(Stream &updateSource, size_t updateSize) {
-  if (Update.begin(updateSize)) {
-    size_t written = Update.writeStream(updateSource);
-    if (written == updateSize) {
-      Serial.println("Written : " + String(written) + " successfully");
-    } else {
-      Serial.println("Written only : " + String(written) + "/" + String(updateSize) + ". Retry?");
-    }
-    if (Update.end()) {
-      Serial.println("OTA done!");
-      if (Update.isFinished()) {
-        Serial.println("Update successfully completed. Rebooting.");
-      } else {
-        Serial.println("Update not finished? Something went wrong!");
-      }
-    } else {
-      Serial.println("Error Occurred. Error #: " + String(Update.getError()));
-    }
+void performUpdate(Stream& updateSource, size_t updateSize) {
+    if (Update.begin(updateSize)) {
+        size_t written = Update.writeStream(updateSource);
+        if (written == updateSize) {
+            Serial.println("Written : " + String(written) + " successfully");
+        } else {
+            Serial.println("Written only : " + String(written) + "/" + String(updateSize) + ". Retry?");
+        }
+        if (Update.end()) {
+            Serial.println("OTA done!");
+            if (Update.isFinished()) {
+                Serial.println("Update successfully completed. Rebooting.");
+            } else {
+                Serial.println("Update not finished? Something went wrong!");
+            }
+        } else {
+            Serial.println("Error Occurred. Error #: " + String(Update.getError()));
+        }
 
-  } else {
-    Serial.println("Not enough space to begin OTA");
-  }
+    } else {
+        Serial.println("Not enough space to begin OTA");
+    }
 }
 
 // check given FS for valid update.bin and perform update if available
-void updateFromFS(fs::FS &fs) {
-  File updateBin = fs.open("/signalforge/main.bin");
-  if (updateBin) {
-    if (updateBin.isDirectory()) {
-      Serial.println("Error, update.bin is not a file");
-      updateBin.close();
-      return;
-    }
+void updateFromFS(fs::FS& fs) {
+    File updateBin = fs.open("/signalforge/main.bin");
+    if (updateBin) {
+        if (updateBin.isDirectory()) {
+            Serial.println("Error, update.bin is not a file");
+            updateBin.close();
+            return;
+        }
 
-    size_t updateSize = updateBin.size();
+        size_t updateSize = updateBin.size();
 
-    if (updateSize > 0) {
-      Serial.println("Try to start update");
-      performUpdate(updateBin, updateSize);
+        if (updateSize > 0) {
+            Serial.println("Try to start update");
+            performUpdate(updateBin, updateSize);
+        } else {
+            Serial.println("Error, file is empty");
+        }
+
+        updateBin.close();
+
+        // when finished remove the binary from sd card to indicate end of the process
+        fs.remove("/signalforge/update.bin");
     } else {
-      Serial.println("Error, file is empty");
+        Serial.println("Could not load update.bin from sd signalforge/ directory");
     }
-
-    updateBin.close();
-
-    // when finished remove the binary from sd card to indicate end of the process
-    fs.remove("/signalforge/update.bin");
-  } else {
-    Serial.println("Could not load update.bin from sd signalforge/ directory");
-  }
 }
 
 void rebootEspWithReason(String reason) {
-  Serial.println(reason);
-  delay(1000);
-  ESP.restart();
+    Serial.println(reason);
+    delay(1000);
+    ESP.restart();
 }
 
 
@@ -117,7 +117,7 @@ void loop() {
     listDir(SD, "/", 2);
 }
 
-void TaskReadFromSerial(void *pvParameters) {
+void TaskReadFromSerial(void* pvParameters) {
     String input;
     String command;
     int overflow;
@@ -132,7 +132,7 @@ void TaskReadFromSerial(void *pvParameters) {
                 while (Serial.available() == 0) {}
                 userInput[i] = Serial.read();
                 if (userInput[i] == '\n' || userInput[i] == '\0' || userInput[i] == '\r') {
-                    userInput[i+1] = 0;
+                    userInput[i + 1] = 0;
                     overflow = 0;
                     break;
                 }
@@ -148,11 +148,11 @@ void TaskReadFromSerial(void *pvParameters) {
             if (input.startsWith("back")) {
                 updateFromFS(SD);
             }
-            
+
             Serial.flush();
 
         }
-        
+
         if ((digitalRead(BUTTON_BACK_PIN) == LOW) && (button_back_clicked == 0)) {
             // back to main menu                
             updateFromFS(SD);
